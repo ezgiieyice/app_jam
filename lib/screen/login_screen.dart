@@ -1,11 +1,17 @@
-import 'package:app_jam/main.dart';
-import 'package:app_jam/screen/city_screen.dart';
+// ignore_for_file: prefer_const_constructors, use_key_in_widget_constructors, use_build_context_synchronously
 import 'package:app_jam/screen/home_screen.dart';
+import 'package:app_jam/screen/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
+
   final TextEditingController passwordController = TextEditingController();
 
   @override
@@ -60,6 +66,15 @@ class LoginScreen extends StatelessWidget {
               },
               child: Text('Log In'),
             ),
+            ElevatedButton(onPressed: (){
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SignUpScreen()
+              )
+            );
+            }, child: Text("Sign In")
+            
+            )
           ],
         ),
       ),
