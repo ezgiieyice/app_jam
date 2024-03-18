@@ -1,40 +1,88 @@
-
-
-// ignore_for_file: camel_case_types, prefer_const_constructors
-
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class buildFavouriteCard extends StatefulWidget {
-  const buildFavouriteCard({super.key});     
+class BuildFavouriteCard extends StatefulWidget {
+  final String name;
+  final String imagePath;
+  int like;
+  String id;
+
+  BuildFavouriteCard({
+    required this.name,
+    required this.imagePath,
+    required this.like,
+    required this.id,
+    Key? key,
+  }) : super(key: key);
 
   @override
-  State<buildFavouriteCard> createState() => _buildFavouriteCardState();
+  State<BuildFavouriteCard> createState() => _BuildFavouriteCardState();
 }
 
-class _buildFavouriteCardState extends State<buildFavouriteCard> {
-  Color color=Colors.grey;
+class _BuildFavouriteCardState extends State<BuildFavouriteCard> {
+  Color color = Colors.grey;
+
+  void _toggleLike() {
+    int newLike = widget.like + (color == Colors.grey ? 1 : -1); // Yeni like değerini hesapla
+    FirebaseFirestore.instance.collection('cities').doc(widget.id).update({
+      'like': newLike, // Firestore'da like alanını güncelle
+    }).then((value) {
+      print('Like updated successfully');
+      setState(() {
+        widget.like = newLike; // State'i güncelle
+        color = color == Colors.grey ? Colors.red : Colors.grey;
+      });
+    }).catchError((error) {
+      print('Failed to update like: $error');
+      // Eğer güncelleme başarısız olursa, rengi geri eski haline getir ve like sayısını düzeltme
+      setState(() {
+        color = color == Colors.grey ? Colors.red : Colors.grey;
+      });
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
-     return Card(
-    shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(10)),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child:Text("görsel"),//data ile yerin görseli buraya eklenecek
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  widget.imagePath,
+                  fit: BoxFit.cover,
+                ),
+                Positioned(
+                  top: 8.0,
+                  left: 8.0,
+                  child: InkWell(
+                    onTap: _toggleLike,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.favorite,
+                          color: color,
+                        ),
+                        SizedBox(width: 4.0),
+                        Text(
+                          widget.like.toString(),
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          Center(child: Text("Yerin adı")),//data ile yerin adı buraya eklenecek.
-          Padding(padding: EdgeInsets.only(left: 70,right:70),
-          child: IconButton(color:color,onPressed: (){        
-            //eğer kullanıcı beğenirse favorilerine eklenecek.       
-              setState(() {
-                color=color==Colors.grey ? Colors.red:Colors.grey;
-              });
-          }, icon: Icon(Icons.favorite,)),
-          ),
-      ],
-    ),
-  );
+          Center(child: Text(widget.name)),
+        ],
+      ),
+    );
   }
 }

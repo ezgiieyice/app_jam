@@ -229,7 +229,7 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar:navigation(page: 3),
+      bottomNavigationBar :Navigation(page: 3,),
     );
   }
 }

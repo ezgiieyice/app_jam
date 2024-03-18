@@ -1,6 +1,6 @@
-// ignore_for_file: use_key_in_widget_constructors, prefer_const_constructors
 import 'package:app_jam/buttons/navigation_bar.dart';
-import 'package:app_jam/screen/city_screen.dart';
+import 'package:app_jam/screen/city_detail_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import'package:flutter/material.dart';
 class CitiesScreen extends StatefulWidget {
   @override
@@ -13,78 +13,105 @@ class _CitiesScreenState extends State<CitiesScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-
+        title: Text('Anında'),
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle('En Popüler Şehirler'),
-            _buildCityList(),
+            _buildPopularCityList(),
             _buildSectionTitle('Tüm Şehirler'),
-            _buildCityGrid(),
+            _buildCityGridFromFirestore(),
           ],
         ),
       ),
-      bottomNavigationBar: navigation(page: 1),
+      bottomNavigationBar: Navigation(page: 1,),
     );
   }
 
   Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Text(
-        title,
-        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.orangeAccent,
+        borderRadius: BorderRadius.circular(8.0),
       ),
-    );
-  }
-
-  Widget _buildCityList() {
-    return SizedBox(
-      height: 100,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        itemExtent: 130, // Kartların genişliği
-        padding: EdgeInsets.all(8.0),
+      margin: EdgeInsets.all(12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildCityCard('İstanbul', 'assets/istanbul.jpg'),
-          _buildCityCard('Ankara', 'assets/istanbul.jpg'),
-          _buildCityCard('İzmir', 'assets/istanbul.jpg'),
-          _buildCityCard('Trabzon', 'assets/istanbul.jpg'),
-          _buildCityCard('Diyarbakır', 'assets/istanbul.jpg'),
-          _buildCityCard('Şanlıurfa', 'assets/istanbul.jpg'),
+          SizedBox(width: 12.0), // Sol kenar boşluğu
+          Text(
+            title,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(width: 12.0), // Sağ kenar boşluğu
         ],
       ),
     );
   }
 
-  Widget _buildCityGrid() {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 8.0,
-      crossAxisSpacing: 8.0,
-      padding: EdgeInsets.all(8.0),
-      children: [
-        _buildCityCard('İstanbul', 'assets/istanbul.jpg'),
-        _buildCityCard('Ankara', 'assets/istanbul.jpg'),
-        _buildCityCard('İzmir', 'assets/istanbul.jpg'),
-        _buildCityCard('Trabzon', 'assets/istanbul.jpg'),
-        _buildCityCard('Diyarbakır', 'assets/istanbul.jpg'),
-        _buildCityCard('Şanlıurfa', 'assets/istanbul.jpg'),
-        
-      ],
+  //like sayısına göre ilk 5 şehiri getiren fonk
+  Widget _buildPopularCityList() {
+    return SizedBox(
+      height: 100,
+      child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('cities').orderBy('like', descending: true).limit(5).snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return CircularProgressIndicator();
+          }
+          List<Widget> cityCards = [];
+          snapshot.data!.docs.forEach((doc) {
+            String cityName = doc['isim'];
+            String cityId = doc['plaka'];
+            cityCards.add(_buildCityCard(cityName, 'assets/istanbul.jpg',cityId));
+            //_buildCityCard(cityName, cityId);
+          });
+          return ListView(
+            scrollDirection: Axis.horizontal,
+            itemExtent: 130,
+            padding: EdgeInsets.all(8.0),
+            children: cityCards,
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildCityCard(String cityName, String imagePath) {
+  Widget _buildCityGridFromFirestore() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('cities').orderBy('isim').snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return CircularProgressIndicator(); // Veri yüklenene kadar dönme animasyonu göster
+        }
+        List<Widget> cityCards = [];
+        snapshot.data!.docs.forEach((doc) {
+          String cityName = doc['isim'];
+          //String imagePath = doc['imagePath'];
+          String cityId = doc['plaka'];
+          cityCards.add(_buildCityCard(cityName, 'assets/istanbul.jpg',cityId));
+        });
+        return GridView.count(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(), // GridView'in kendi scroll'u olmasın
+          crossAxisCount: 2,
+          mainAxisSpacing: 8.0,
+          crossAxisSpacing: 8.0,
+          padding: EdgeInsets.all(8.0),
+          children: cityCards,
+        );
+      },
+    );
+  }
+
+  Widget _buildCityCard(String cityName,String image, String cityId) {
     return InkWell(
       onTap: () {
         Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => Cityscreen(cityname: cityName,)),
+              MaterialPageRoute(builder: (context) => CityDetailscreen(cityName: cityName, cityId: cityId,)),
             );
       },
       child: Card(
@@ -97,7 +124,7 @@ class _CitiesScreenState extends State<CitiesScreen> {
           children: [
             Expanded(
               child: Image.asset(
-                imagePath,
+                'assets/istanbul.jpg',
                 fit: BoxFit.cover,
               ),
             ),

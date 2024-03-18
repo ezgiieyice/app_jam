@@ -1,16 +1,103 @@
-// ignore_for_file: use_key_in_widget_constructors, use_build_context_synchronously
-
 import 'package:app_jam/screen/login_screen.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-class SignUpScreen extends StatelessWidget {
+class SignUpScreen extends StatefulWidget {
+  @override
+  _SignUpScreenState createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen>{
+  final TextEditingController fullNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  @override
+  void initState() {
+    super.initState();
+    checkInternetConnection(); // initState() içinde internet bağlantısını kontrol etme fonk.
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Kayıt Ol'),
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: fullNameController,
+              decoration: InputDecoration(labelText: 'Ad - Soyad'),
+            ),
+            SizedBox(height: 8.0),
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(labelText: 'Email'),
+            ),
+            SizedBox(height: 8.0),
+            TextField(
+              controller: passwordController,
+              decoration: InputDecoration(labelText: 'Şifre'),
+              obscureText: true,
+            ),
+            SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                    email: emailController.text,
+                    password: passwordController.text,
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Kullanıcı başarıyla oluşturuldu!'),
+                    ),
+                  );
+                  // Kullanıcı başarıyla kaydedildikten sonra login'e yönlendirilir
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => LoginScreen(), // Yönlendirilecek sayfanın adı ve constructor'ı
+                    ),
+                  );
+
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Kullanıcı oluşturulamadı - $e'),
+                    ),
+                  );
+                }
+              },
+              child: Text('Kayıt Ol'),
+            ),
+            SizedBox(height: 8.0),
+            ElevatedButton(
+              onPressed: () => _signInWithGoogle(context),
+              child: Text('Google ile Kayıt Ol'),
+            ),
+            SizedBox(height: 8.0),
+            ElevatedButton(
+                onPressed: (){
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                  );
+                },
+                child: Text('Giriş Yap')),
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> _signInWithGoogle(BuildContext context) async {
     try {
@@ -36,66 +123,29 @@ class SignUpScreen extends StatelessWidget {
       );
     }
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Sign Up'),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-            ),
-            SizedBox(height: 8.0),
-            TextField(
-              controller: passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                    email: emailController.text,
-                    password: passwordController.text,
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('User signed up successfully!'),
-                    ),
-                  );
-                  // Kullanıcı başarıyla kaydedildikten sonra login'e yönlendirilir
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => LoginScreen(), // Yönlendirilecek sayfanın adı ve constructor'ı
-                    ),
-                  );
-
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to sign up - $e'),
-                    ),
-                  );
-                }
-              },
-              child: Text('Sign Up'),
-            ),
-            SizedBox(height: 8.0),
-            ElevatedButton(
-              onPressed: () => _signInWithGoogle(context),
-              child: Text('Sign in with Google'),
-            ),
-          ],
-        ),
-      ),
-    );
+  // İnternet bağlantısını kontrol eden fonksiyon
+  Future<void> checkInternetConnection() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('İnternet Bağlantısı Hatası'),
+            content: Text('Lütfen internet bağlantınızı kontrol edin.'),
+            actions: <Widget>[
+              FloatingActionButton(
+                child: Text('Kapat'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
+
+
 }

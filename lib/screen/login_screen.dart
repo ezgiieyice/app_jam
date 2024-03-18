@@ -1,4 +1,3 @@
-// ignore_for_file: prefer_const_constructors, use_key_in_widget_constructors, use_build_context_synchronously
 import 'package:app_jam/screen/home_screen.dart';
 import 'package:app_jam/screen/signup_screen.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Log In'),
+        title: Text('Giriş'),
         automaticallyImplyLeading: false,
       ),
       body: Padding(
@@ -33,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(height: 8.0),
             TextField(
               controller: passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(labelText: 'Şifre'),
               obscureText: true,
             ),
             SizedBox(height: 16.0),
@@ -46,25 +45,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('User logged in successfully!'),
+                      content: Text('Başarıyla Giriş Yapıldı!'),
                     ),
                   );
-
-                  // Kullanıcı başarıyla kaydedildikten sonra başka bir sayfaya yönlendirin
+                  // Kullanıcı başarıyla kaydedildikten sonra başka bir sayfaya yönlendir
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                      builder: (context) => HomeScreen(), // Yönlendirilecek sayfanın adını ve constructor'ını buraya ekleyin
+                      builder: (context) => HomeScreen(),
                     ),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to log in - $e'),
+                      content: Text('Giriş Yapılamadı. - $e'),
                     ),
                   );
                 }
               },
-              child: Text('Log In'),
+              child: Text('Giriş Yap'),
             ),
             ElevatedButton(onPressed: (){
               Navigator.push(
@@ -72,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
               MaterialPageRoute(builder: (context) => SignUpScreen()
               )
             );
-            }, child: Text("Sign In")
+            }, child: Text("Kayıt Ol")
             
             )
           ],
